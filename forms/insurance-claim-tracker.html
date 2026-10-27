@@ -18,10 +18,10 @@
   <div class="k-section">
     <h2 class="k-hed">Patient / policy (fill in once)</h2>
     <div class="k-grid k-grid-4">
-      <div class="k-field"><label class="k-label">Patient name</label><input class="k-input" type="text"></div>
-      <div class="k-field"><label class="k-label">Member / policy ID</label><input class="k-input" type="text"></div>
-      <div class="k-field"><label class="k-label">Group number</label><input class="k-input" type="text"></div>
-      <div class="k-field"><label class="k-label">Insurer phone</label><input class="k-input" type="text"></div>
+      <div class="k-field"><label class="k-label" for="ic-patient-name">Patient name</label><input class="k-input" id="ic-patient-name" name="patient-name" type="text" autocomplete="off"></div>
+      <div class="k-field"><label class="k-label" for="ic-member-id">Member / policy ID</label><input class="k-input" id="ic-member-id" name="member-id" type="text" autocomplete="off"></div>
+      <div class="k-field"><label class="k-label" for="ic-group-number">Group number</label><input class="k-input" id="ic-group-number" name="group-number" type="text" autocomplete="off"></div>
+      <div class="k-field"><label class="k-label" for="ic-insurer-phone">Insurer phone</label><input class="k-input" id="ic-insurer-phone" name="insurer-phone" type="text" autocomplete="off"></div>
     </div>
     <p class="k-note">No personal data is stored by this kit. These fields stay on your device unless you print or share the page yourself.</p>
   </div>
@@ -31,16 +31,16 @@
     <table class="k-table">
       <thead>
         <tr>
-          <th style="width:6%">#</th>
-          <th style="width:12%">Date submitted</th>
-          <th style="width:14%">Claim number</th>
-          <th style="width:16%">Provider / facility</th>
-          <th style="width:10%">Date of service</th>
-          <th style="width:10%">Amount billed</th>
-          <th style="width:10%">Allowed amount</th>
-          <th style="width:10%">Amount paid</th>
-          <th style="width:6%">Denied?</th>
-          <th style="width:16%">Notes / next step</th>
+          <th style="width:4%">#</th>
+          <th style="width:9%">Date submitted</th>
+          <th style="width:11%">Claim number</th>
+          <th style="width:13%">Provider / facility</th>
+          <th style="width:7%">Date of service</th>
+          <th style="width:8%">Amount billed</th>
+          <th style="width:8%">Allowed amount</th>
+          <th style="width:8%">Amount paid</th>
+          <th style="width:4%">Denied?</th>
+          <th style="width:28%">Notes / next step</th>
         </tr>
       </thead>
       <tbody>
@@ -82,8 +82,8 @@
       </tbody>
     </table>
     <div class="k-field">
-      <label class="k-label">Notes</label>
-      <textarea class="k-input" placeholder="Appeal outcomes, phone calls with the insurer, next steps&#8230;"></textarea>
+      <label class="k-label" for="ic-notes">Notes</label>
+      <textarea class="k-input" id="ic-notes" name="notes" placeholder="Appeal outcomes, phone calls with the insurer, next steps&#8230;"></textarea>
     </div>
   </div>
 

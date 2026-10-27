@@ -1,6 +1,7 @@
 // Free Medical Bill Organizer Kit — static verification script
 // Checks structure of all HTML forms: required tags, unique ids, label->id references,
-// credit/disclaimer presence, plus LICENSE and README content.
+// table column widths summing to ~100%, name attributes, credit/disclaimer presence,
+// plus LICENSE and README content.
 // Exit code 1 on any failure.
 
 const fs = require('fs');
@@ -20,6 +21,7 @@ const expectedHtml = [
   'forms/charity-care-application-tracker.html'
 ];
 const expectedMarkdown = [
+  'markdown/index.md',
   'markdown/medical-bill-tracker.md',
   'markdown/insurance-claim-tracker.md',
   'markdown/eob-review-worksheet.md',
@@ -27,39 +29,47 @@ const expectedMarkdown = [
   'markdown/charity-care-application-tracker.md'
 ];
 
-function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8'); }
+function read(rel) {
+  const full = path.join(root, rel);
+  if (!fs.existsSync(full)) return null;
+  return fs.readFileSync(full, 'utf8');
+}
+function exists(rel) { return fs.existsSync(path.join(root, rel)); }
 
 // 1. Files exist
-for (const f of [...expectedHtml, ...expectedMarkdown, 'README.md', 'LICENSE', 'STATUS.md',
+for (const f of [...expectedHtml, ...expectedMarkdown, 'README.md', 'LICENSE',
                  'forms/css/print-forms.css', 'forms/js/forms.js']) {
-  if (!fs.existsSync(path.join(root, f))) fail('missing file: ' + f);
+  if (!exists(f)) fail('missing file: ' + f);
   else pass('exists: ' + f);
 }
+
+// STATUS.md is expected but optional for the check (it's written last)
+if (!exists('STATUS.md')) fail('missing file: STATUS.md');
+else pass('exists: STATUS.md');
 
 // 2. No forbidden files
 const forbidden = ['.github/workflows'];
 for (const f of forbidden) {
-  if (fs.existsSync(path.join(root, f))) fail('forbidden file present: ' + f);
+  if (exists(f)) fail('forbidden file present: ' + f);
   else pass('no forbidden file: ' + f);
 }
 
 // 3. HTML structure checks
-function attrRegex(tagAttr) { return new RegExp(tagAttr + '\\s*=\\s*"([^"]*)"', 'g'); }
-
 for (const rel of expectedHtml) {
   const html = read(rel);
-  const lower = html.toLowerCase();
+  if (!html) continue;
 
   if (!/<!doctype\s+html/i.test(html)) fail(rel + ': missing <!doctype html>');
-  else pass(rel + ': doctype present');
-
   if (!/<html\b/i.test(html)) fail(rel + ': missing <html>');
   if (!/<head\b/i.test(html)) fail(rel + ': missing <head>');
   if (!/<body\b/i.test(html)) fail(rel + ': missing <body>');
   if (!/<title[^>]*>[\s\S]*?<\/title>/i.test(html)) fail(rel + ': missing <title>');
-  else pass(rel + ': basic structure present');
+  if (/<!doctype\s+html/i.test(html) && /<html\b/i.test(html) && /<head\b/i.test(html) && /<body\b/i.test(html) && /<title[^>]*>[\s\S]*?<\/title>/i.test(html)) {
+    pass(rel + ': basic structure present');
+  }
 
-  if (!/media\s*=\s*"print"/.test(html) && !/print-forms\.css/.test(html)) fail(rel + ': no print stylesheet link');
+  if (!/print-forms\.css/.test(html)) fail(rel + ': no print stylesheet link');
+  else pass(rel + ': print stylesheet linked');
 
   // Unique ids
   const ids = [];
@@ -70,47 +80,110 @@ for (const rel of expectedHtml) {
   if (dupes.length) fail(rel + ': duplicate id(s): ' + JSON.stringify([...new Set(dupes)]));
   else pass(rel + ': ' + ids.length + ' unique ids');
 
-  // label for -> existing id
+  // label for -> existing id (for all labeled elements, not just checkboxes)
   const idSet = new Set(ids);
   const forRe = /\bfor\s*=\s*"([^"]*)"/gi;
   let dangling = 0;
   while ((m = forRe.exec(html))) {
     if (!idSet.has(m[1])) { dangling++; fail(rel + ': label for unknown id "' + m[1] + '"'); }
   }
-  if (!dangling) pass(rel + ': all label `for` attributes resolve');
+  if (!dangling && ids.length > 0) pass(rel + ': all label `for` attributes resolve');
+
+  // Every <label> should have a `for` attribute (accessibility)
+  const labelRe = /<label[^>]*>/gi;
+  let labelsWithoutFor = 0;
+  while ((m = labelRe.exec(html))) {
+    if (!/\bfor\s*=/.test(m[0])) {
+      // skip labels that wrap their input (not used here) - flag it
+      labelsWithoutFor++;
+      fail(rel + ': label without `for` attribute: ' + m[0].trim().slice(0, 60));
+    }
+  }
+  if (labelsWithoutFor === 0) pass(rel + ': all labels have `for` attribute');
+
+  // Inputs should have name attributes (excluding blank k-fill table cells and checkboxes)
+  const inputRe = /<input[^>]*>/gi;
+  let inputsWithoutName = 0;
+  while ((m = inputRe.exec(html))) {
+    if (!/\bname\s*=/.test(m[0]) && !/class="k-fill"/.test(m[0]) && !/type="checkbox"/.test(m[0])) { inputsWithoutName++; }
+  }
+  if (inputsWithoutName === 0) pass(rel + ': all inputs have `name` attribute');
+  else fail(rel + ': ' + inputsWithoutName + ' input(s) missing `name` attribute');
 
   // Credit + disclaimer
   if (!/Asdale Dynamics, LLC/.test(html)) fail(rel + ': missing Asdale Dynamics, LLC credit');
-  if (!/education only[^.]*not billing advice/i.test(html) && !/not billing advice/i.test(html)) fail(rel + ': missing not-billing-advice notice');
+  else pass(rel + ': Asdale Dynamics, LLC credit present');
+  if (!/not billing advice/i.test(html)) fail(rel + ': missing not-billing-advice notice');
+  else pass(rel + ': not-billing-advice notice present');
+
+  // Table column widths sum to ~100% per table
+  const tableRe = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+  let tableCheckOk = true;
+  let tableMatch;
+  while ((tableMatch = tableRe.exec(html))) {
+    const tableContent = tableMatch[1];
+    const thRe = /<th[^>]*style="[^"]*width\s*:\s*(\d+)%[^"]*"[^>]*>/g;
+    let widthSum = 0;
+    let hasWidths = false;
+    let tm;
+    while ((tm = thRe.exec(tableContent))) {
+      widthSum += parseInt(tm[1], 10);
+      hasWidths = true;
+    }
+    if (hasWidths) {
+      if (widthSum > 105 || widthSum < 95) {
+        fail(rel + ': table column widths sum to ' + widthSum + '% (should be ~100%)');
+        tableCheckOk = false;
+      }
+    }
+  }
+  if (tableCheckOk) pass(rel + ': table column widths sum to ~100% per table');
 }
 
 // 4. Markdown files contain required sections
 for (const rel of expectedMarkdown) {
   const md = read(rel);
+  if (!md) continue;
   if (!/# /.test(md)) fail(rel + ': missing top-level heading');
   if (!/Asdale Dynamics, LLC/.test(md)) fail(rel + ': missing credit');
   if (!/not billing advice/i.test(md)) fail(rel + ': missing disclaimer');
-  pass(rel + ': heading, credit, disclaimer present');
+  if (/# /.test(md) && /Asdale Dynamics, LLC/.test(md) && /not billing advice/i.test(md)) {
+    pass(rel + ': heading, credit, disclaimer present');
+  }
 }
 
 // 5. LICENSE exact copyright line
 const license = read('LICENSE');
-if (!license.includes('Copyright (c) 2026 Asdale Dynamics, LLC')) fail('LICENSE: exact copyright line missing');
-else pass('LICENSE: exact copyright line present');
-if (!license.includes('MIT License')) fail('LICENSE: missing MIT License header');
+if (license) {
+  if (!license.includes('Copyright (c) 2026 Asdale Dynamics, LLC')) fail('LICENSE: exact copyright line missing');
+  else pass('LICENSE: exact copyright line present');
+  if (!license.includes('MIT License')) fail('LICENSE: missing MIT License header');
+  else pass('LICENSE: MIT License header present');
+} else {
+  fail('LICENSE: file not found');
+}
 
 // 6. README credit + license reference
 const readme = read('README.md');
-if (!/Asdale Dynamics, LLC/.test(readme)) fail('README: missing Asdale Dynamics, LLC credit');
-if (!/Copyright \(c\) 2026 Asdale Dynamics, LLC/.test(readme)) fail('README: missing copyright line');
-if (!/\[LICENSE\]\(LICENSE\)/.test(readme)) fail('README: missing LICENSE reference');
-pass('README: credit, copyright line, license reference present');
+if (readme) {
+  if (!/Asdale Dynamics, LLC/.test(readme)) fail('README: missing Asdale Dynamics, LLC credit');
+  else pass('README: Asdale Dynamics, LLC credit present');
+  if (!/Copyright \(c\) 2026 Asdale Dynamics, LLC/.test(readme)) fail('README: missing copyright line');
+  else pass('README: copyright line present');
+  if (!/\[LICENSE\]\(LICENSE\)/.test(readme)) fail('README: missing LICENSE reference');
+  else pass('README: LICENSE reference present');
+} else {
+  fail('README: file not found');
+}
 
 // 7. No secrets or personal-data-looking content
 const secretRe = /(sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|password\s*=\s*"[^"]*")/i;
-for (const f of [...expectedHtml, ...expectedMarkdown, 'README.md', 'LICENSE', 'STATUS.md', 'forms/css/print-forms.css', 'forms/js/forms.js']) {
+const allFiles = [...expectedHtml, ...expectedMarkdown, 'README.md', 'LICENSE',
+                  'forms/css/print-forms.css', 'forms/js/forms.js'];
+if (exists('STATUS.md')) allFiles.push('STATUS.md');
+for (const f of allFiles) {
   const content = read(f);
-  if (secretRe.test(content)) fail(f + ': possible secret or credential present');
+  if (content && secretRe.test(content)) fail(f + ': possible secret or credential present');
 }
 pass('no obvious secrets or credentials in committed files');
 
