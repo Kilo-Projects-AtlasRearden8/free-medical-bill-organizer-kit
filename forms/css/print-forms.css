@@ -1,0 +1,310 @@
+/*
+ * Free Medical Bill Organizer Kit — shared print styles
+ * Credit: Asdale Dynamics, LLC (education only, not billing advice)
+ */
+
+:root {
+  --ink: #1f2937;
+  --muted: #4b5563;
+  --line: #cbd5e1;
+  --brand: #0f6f9b;
+  --brand-soft: #e7f1f8;
+  --warm-bg: #fbfaf6;
+  --row-alt: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--warm-bg);
+  font-size: 12px;
+}
+
+.page {
+  max-width: 794px; /* A4 width at 96px/in */
+  margin: 0 auto;
+  padding: 18px 20px;
+  background: #fff;
+}
+
+form {
+  display: block;
+}
+
+.k-band {
+  background: var(--brand);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.k-title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.k-sub {
+  margin: 0;
+  font-size: 11px;
+  color: #dbe9f4;
+}
+
+.k-hed {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin: 16px 0 6px 0;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 3px;
+}
+
+.k-hed.no-line {
+  border: none;
+}
+
+.k-p {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.k-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.k-grid-2 { grid-template-columns: 1fr 1fr; }
+.k-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.k-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.k-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.k-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.k-input {
+  font: inherit;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.k-input:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+textarea.k-input {
+  min-height: 56px;
+  resize: vertical;
+}
+
+.k-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+
+.k-table th,
+.k-table td {
+  border: 1px solid var(--line);
+  padding: 5px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.k-table th {
+  background: #eef2f7;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.k-table tr:nth-child(even) td {
+  background: var(--row-alt);
+}
+
+.k-fill {
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 3px 4px;
+  background: transparent;
+  font: inherit;
+  width: 100%;
+}
+
+.k-fill:focus {
+  border-bottom-color: var(--brand);
+  outline: none;
+}
+
+.k-checkrow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 10.5px;
+  margin: 4px 0;
+}
+
+.k-checkrow input {
+  margin: 0;
+}
+
+.k-cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.k-note {
+  font-size: 9.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.k-total-row td {
+  font-weight: 700;
+  background: var(--brand-soft) !important;
+}
+
+.k-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.k-btn {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.k-btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.k-btn-outline {
+  background: #fff;
+  color: var(--ink);
+}
+
+.k-disclaimer {
+  margin-top: 18px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  background: #fafafa;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.k-disclaimer b {
+  color: var(--ink);
+}
+
+/* ---------- Print ---------- */
+
+@media print {
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    background: #fff !important;
+    font-size: 11px;
+  }
+  .page {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 14mm 14mm 16mm 14mm;
+    box-shadow: none;
+    border: none;
+    background: #fff !important;
+  }
+  .k-actions,
+  .k-no-print {
+    display: none !important;
+  }
+  .k-table {
+    page-break-inside: auto;
+  }
+  .k-table tr {
+    page-break-inside: avoid;
+  }
+  .k-section {
+    page-break-inside: avoid;
+  }
+  .k-input {
+    background: #fff !important;
+    box-shadow: none !important;
+    border-color: #374151 !important;
+  }
+  .k-input:focus {
+    box-shadow: none !important;
+  }
+  .k-disclaimer {
+    border-style: solid !important;
+  }
+  @page {
+    margin: 12mm 12mm 14mm 12mm;
+    size: A4;
+  }
+}
+
+/* Section grouping for print control */
+.k-section {
+  margin-bottom: 14px;
+}
+
+.k-extra-rows tr td {
+  padding: 7px;
+}
+
+.small {
+  font-size: 10px;
+}
+
+.k-chip {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-right: 6px;
+  color: var(--muted);
+}
